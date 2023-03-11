@@ -1,0 +1,203 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Global
+        Parameters:
+          - Client
+      - Label:
+          default: VPC
+        Parameters:
+          - VpcCidr
+          - VpcPublicSubnetZone
+          - VpcPublicSubnetCidr
+      - Label:
+          default: EC2
+        Parameters:
+          - Ec2KeyPairName
+          - Ec2AmiId
+          - Ec2IamInstanceProfile
+          - Ec2JupyterPassword
+    ParameterLabels:
+      Client:
+        default: Cliente
+      VpcCidr:
+        default: VPC CIDR
+      VpcPublicSubnetCidr:
+        default: Subnet Publico CIDR
+      VpcPublicSubnetZone:
+        default: Zona da Subnet Publica
+      Ec2KeyPairName:
+        default: Chave de Acesso
+      Ec2AmiId:
+        default: AMI
+      Ec2IamInstanceProfile:
+        default: IAM Instance Profile Id
+      Ec2JupyterPassword:
+        default: Senha Jupyter
+Parameters:
+  Client:
+    Type: String
+    Description: O nome do cliente
+    Default: sptech
+  VpcCidr:
+    Type: String
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Description: O bloco CIDR da VPC (ex. 10.10.0.0/24)
+    Default: 10.100.0.0/24
+  VpcPublicSubnetCidr:
+    Type: String
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Description: O bloco CIDR da Subnet Publica (ex. 10.10.0.0/24)
+    Default: 10.100.0.0/24
+  VpcPublicSubnetZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: A zona de disponibilidade para criar a Subnet Publica 
+    Default: us-east-1a
+  Ec2KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Chave de acesso a instancia
+  Ec2AmiId:
+    Type: String
+    Description: Id da AMI
+    Default: ami-0f9fc25dd2506cf6d
+  Ec2IamInstanceProfile:
+    Type: String
+    Description: O nome do Instance Profile
+    Default: EMR_EC2_DefaultRole
+  Ec2JupyterPassword:
+    Type: String
+    NoEcho: true
+    Description: A senha de acesso ao jupyter
+Resources:
+  BucketRaw: 
+    Type: "AWS::S3::Bucket"
+    Description: "Creating Amazon S3 bucket from CloudFormation"
+    Properties: 
+      AccessControl: Private
+      BucketName: !Sub ${AWS::StackName}-${Client}-raw
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  BucketPreprocessed: 
+    Type: "AWS::S3::Bucket"
+    Description: "Creating Amazon S3 bucket from CloudFormation"
+    Properties: 
+      AccessControl: Private
+      BucketName: !Sub ${AWS::StackName}-${Client}-preprocessed
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  BucketClean: 
+    Type: "AWS::S3::Bucket"
+    Description: "Creating Amazon S3 bucket from CloudFormation"
+    Properties: 
+      AccessControl: Private
+      BucketName: !Sub ${AWS::StackName}-${Client}-clean
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-${Client}
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-${Client}
+  InternetGatewayAttachment:
+    DependsOn: [InternetGateway, Vpc]
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+  PublicRouteTable:
+    DependsOn: Vpc
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-${Client}-public
+  PublicRouteTableRouteInternet:
+    DependsOn: [PublicRouteTable, InternetGateway]
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref VpcPublicSubnetZone
+      CidrBlock: !Ref VpcPublicSubnetCidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-${Client}-public
+  RouteTableAssociationPublicSubnet:
+    DependsOn: [PublicRouteTable, PublicSubnet]
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+  InstanceSecurityGroup:
+    DependsOn: Vpc
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow only https ingress
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-${Client}
+  Instance:
+    DependsOn: [RouteTableAssociationPublicSubnet, InstanceSecurityGroup]
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref Ec2KeyPairName
+      ImageId: !Ref Ec2AmiId
+      InstanceType: t2.medium
+      SubnetId: !Ref PublicSubnet
+      IamInstanceProfile: !Ref Ec2IamInstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          amazon-linux-extras install java-openjdk11 docker -y
+          systemctl start docker
+          systemctl enable docker
+          docker run -d -p 3306:3306 --name sql-clean -e "MYSQL_ROOT_PASSWORD=123" -e "MYSQL_DATABASE=criminix-clean" -e "MYSQL_USER=criminix" -e MYSQL_PASSWORD="criminix" mysql
+          docker run -it --name jupyter -p 80:80 jupyter/pyspark-notebook start.sh jupyter lab --port 80 --allow-root --ip 0.0.0.0 --ServerApp.token='' --ServerApp.password='' &> /dev/null &
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-${Client}
