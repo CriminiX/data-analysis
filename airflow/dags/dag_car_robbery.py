@@ -1,11 +1,11 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from ssp_extract import extract_file
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from datetime import datetime
 from airflow.models import Variable
 import os
+from models.setup_car_robbery import start_setup_car_threft
 
 default_args = {
     "start_date": datetime(2003, 1, 1), 
@@ -15,7 +15,7 @@ def delete_file(name):
     os.remove(name)
 
 with DAG(
-    "ssp_extraction_to_s3", schedule="@monthly", catchup=True, max_active_runs=2, default_args=default_args
+    "ssp_extraction_to_s3_car_robbery", schedule="@monthly", catchup=True, max_active_runs=2, default_args=default_args
 ) as dag:
     filename = "{{ ds }}.xlsx"
     execution_date = "{{ ds }}"
@@ -23,14 +23,14 @@ with DAG(
     bucket = Variable.get("bucket_raw_default", "tcc_raw")
 
     extract_task = PythonOperator(
-        task_id="extract", python_callable=extract_file, 
+        task_id="extract", python_callable=start_setup_car_threft, 
         op_kwargs={"reference_date": execution_date, "default_filename": filename}
     )
 
     load_task = LocalFilesystemToS3Operator(
         task_id="load", 
         filename=filename, 
-        dest_key=f"s3://{bucket}/car_theft/{partition}/{filename}",
+        dest_key=f"s3://{bucket}/car_robbery/{partition}/{filename}",
         replace=True
     )
 
