@@ -1,12 +1,17 @@
+import warnings
 import pandas as pd
-import glob
-import numpy as np
 
-df = pd.read_csv("furtos_consolidado.csv")
+warnings.filterwarnings('ignore')
+
+df = pd.read_csv("./notebooks/furtos_consolidado.csv")
 crimes = df[["DATAOCORRENCIA", "HORAOCORRENCIA", "CIDADE", "BAIRRO", "LOGRADOURO", "DESCRICAOLOCAL"]]
 crimes["DATAHORA"] = pd.to_datetime(crimes["DATAOCORRENCIA"] + " " + crimes["HORAOCORRENCIA"])
 crimes.drop(columns=["DATAOCORRENCIA", "HORAOCORRENCIA"], inplace=True)
 crimes.dropna(inplace=True)
+
+categorical_cols = ["CIDADE", "BAIRRO", "LOGRADOURO", "DESCRICAOLOCAL"]
+for c in categorical_cols:
+  crimes.loc[:, c] = crimes[c].str.normalize("NFKD").str.encode("ascii",  errors='ignore').str.decode("UTF-8").str.lower()
 
 crimes["DATA"] = crimes["DATAHORA"].dt.date
 crimes["ANO"] = crimes["DATAHORA"].dt.year
@@ -38,44 +43,44 @@ crimes = crimes.reindex(columns=[
 crimes_sp = crimes[crimes["CIDADE"] == "s.paulo"]
 crimes_remaining = crimes[crimes["CIDADE"] != "s.paulo"]
 
-from sklearn.preprocessing import SplineTransformer, OneHotEncoder, MinMaxScaler
+print(crimes_sp.shape)
+print(crimes_remaining.shape)
+
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn import tree
 
-def periodic_spline_transformer(period, n_splines=None, degree=3):
-    if n_splines is None:
-        n_splines = period
-    n_knots = n_splines + 1  # periodic and include_bias is True
-    return SplineTransformer(
-        degree=degree,
-        n_knots=n_knots,
-        knots=np.linspace(0, period, n_knots).reshape(n_knots, 1),
-        extrapolation="periodic",
-        include_bias=True,
+def _train(name, crimes):
+    X, y = crimes.iloc[:, :-1].values, crimes.iloc[:, -1].values
+
+    one_hot_encoder = OneHotEncoder(drop="first")
+    preprocessing = ColumnTransformer(transformers=[
+        ("categories", one_hot_encoder, [0, 1, 2, 3])
+    ], remainder="passthrough")
+
+    regressor = tree.DecisionTreeRegressor(
+        max_depth=20,
+        random_state=42,
+        min_samples_leaf=100
     )
 
-X, y = crimes.iloc[:, :-1].values, crimes.iloc[:, -1].values
+    pipeline = make_pipeline(preprocessing, regressor)
+    pipeline.fit(X, y)
 
-one_hot_encoder = OneHotEncoder(drop="first")
-preprocessing = ColumnTransformer(transformers=[
-    ("categories", one_hot_encoder, [0, 1, 2, 3]),
-    ("month", periodic_spline_transformer(12, 6), [4]),
-    ("day", periodic_spline_transformer(365, 182), [5]),
-    ("hour", periodic_spline_transformer(24, 12), [6]),
-    ("weekday", periodic_spline_transformer(7, 3), [7])
-], remainder="drop")
+    from joblib import dump
+    dump(pipeline, f"./models/score/{name}.joblib")
 
-regressor = tree.DecisionTreeRegressor(
-    max_depth=20,
-    random_state=42,
-    min_samples_leaf=100
-)
+    from skl2onnx import convert_sklearn
+    from skl2onnx.common.data_types import StringTensorType, Int32TensorType
 
-pipeline = make_pipeline(preprocessing, regressor)
-pipeline.fit(X, y)
+    initial_types = [
+        ("categories", StringTensorType([None, 4])),
+        ("numbers", Int32TensorType([None, 4])),
+    ]
+    onnx_model = convert_sklearn(pipeline, initial_types=initial_types)
+    with open(f"./models/score/{name}.onnx", "+wb") as f:
+        f.write(onnx_model.SerializeToString())
 
-from joblib import dump
-dump(pipeline, "./models/score_sp.joblib")
-
-#TODO - Add sklearn-onnx
+_train("score_sp", crimes_sp)
+_train("score_remaining", crimes_remaining)
