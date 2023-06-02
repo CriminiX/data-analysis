@@ -4,3 +4,4 @@ tests
 .pytest_cache
 temp
 pytest.ini
+__pycache__
