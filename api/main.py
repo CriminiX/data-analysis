@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from api.routes import inference
 from api.store.estimator_store import register_estimator
 import glob
@@ -15,10 +16,19 @@ clone_log_config(logger, server_logger)
 server_logger = logging.getLogger("uvicorn.error")
 clone_log_config(logger, server_logger)
 
+origins = ["*"]
+methods = ["*"]
+headers = ["*"]
 
 app = FastAPI()
 app.include_router(inference.router)
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=methods,
+    allow_headers=headers,
+    allow_credentials=True
+)
 
 @app.on_event("startup")
 async def load_estimators():
