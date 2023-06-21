@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from api.schemas.shared import ScoreFilters
+from schemas.shared import ScoreFilters
 
 
 class ScoreExperiment(BaseModel):

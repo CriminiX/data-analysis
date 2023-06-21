@@ -75,8 +75,8 @@ class PeriodFilter(BaseModel):
 
 class ScoreFilters(BaseModel):
     location: Location
-    shift: Shift | None
-    hour: int | None = Field(description="A hour filter")
+    shift: Shift
+    # hour: int | None = Field(description="A hour filter")
     day: date | None = Field(
         description="A target day, in the format YYYY-MM-DD", example="2023-02-01"
     )

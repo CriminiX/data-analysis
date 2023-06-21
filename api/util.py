@@ -1,5 +1,7 @@
 import logging
-from api.settings import get_settings
+
+import numpy as np
+from settings import get_settings
 from datetime import date
 
 def get_logger(name):
@@ -34,3 +36,9 @@ def shift_by_hour(hour: int):
         return 1
     else:
         return 2
+
+def sin_transform(x, period):
+    return np.sin(x / period * 2 * np.pi)
+
+def cos_transform(x, period):
+    return np.cos(x / period * 2 * np.pi)

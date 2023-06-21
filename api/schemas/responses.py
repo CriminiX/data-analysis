@@ -1,6 +1,6 @@
 from typing import List
 from pydantic import BaseModel
-from api.schemas.shared import Season, Location, Shift
+from schemas.shared import Season, Location, Shift
 
 
 class ScoreReportRecord(BaseModel):
