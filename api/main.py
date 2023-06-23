@@ -4,6 +4,7 @@ from routes import inference
 from store.estimator_store import register_estimator
 from store.data_store import register_table
 from util import get_logger, clone_log_config
+from tensorflow import keras
 import logging
 from settings import get_settings
 
@@ -15,6 +16,8 @@ server_logger = logging.getLogger("uvicorn.access")
 clone_log_config(logger, server_logger)
 server_logger = logging.getLogger("uvicorn.error")
 clone_log_config(logger, server_logger)
+
+keras.utils.disable_interactive_logging()
 
 origins = ["*"]
 methods = ["*"]

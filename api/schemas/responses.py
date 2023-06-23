@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List
 from pydantic import BaseModel
 from schemas.shared import Season, Location, Shift
@@ -5,14 +6,14 @@ from schemas.shared import Season, Location, Shift
 
 class ScoreReportRecord(BaseModel):
     location: Location
-    day: str | None
+    day: date | None
     shift: Shift
     season: Season
     score: float
 
 
 class ScoreReportAxes(BaseModel):
-    days: List[str] | None
+    days: List[date] | None
     shifts: List[Shift]
     seasons: List[Season]
     locations: List[Location]
