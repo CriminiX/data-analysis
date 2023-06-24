@@ -2,7 +2,7 @@ from typing import List
 from schemas.shared import ScoreFilters, ReportOrientation, Location, Season, Shift
 from schemas.responses import ScoreReport, ScoreReportAxes, ScoreReportRecord
 from exceptions import MissingRequiredValues
-from services.location import get_code_by_location
+from services.location import get_code_by_location, get_neighborhood
 from store.estimator_store import predict
 from util import season_by_day, sin_transform, cos_transform
 from datetime import timedelta, date
@@ -130,3 +130,20 @@ def _build_records_report(data: pd.DataFrame):
             )
         )
     return ScoreReport(records=records)
+
+def search(city: str, neighborhood: str):
+    data_list_city = []
+    data_list_neighborhood = []
+
+    if city is not None:
+        data = get_neighborhood(city.lower())
+        data_list_city = list(dict.fromkeys(data))
+
+    if neighborhood is not None:
+        data = get_neighborhood(neighborhood.lower())
+        data_list_neighborhood = list(dict.fromkeys(data))
+
+    return {
+        'cidades': data_list_city,
+        'bairros': data_list_neighborhood
+    }
