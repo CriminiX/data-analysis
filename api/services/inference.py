@@ -21,7 +21,7 @@ def score(filters: ScoreFilters, orient: ReportOrientation):
     exp = _build_experiments(filters)
     X = _to_features(exp)
     scores = predict(X, "score_full")
-
+    scores = _adjust_score(scores)
     return _build_report(exp, scores, orient)
 
 
@@ -49,7 +49,7 @@ def _to_features(experiments: pd.DataFrame):
     X["dia_sin"] = sin_transform(X["dia"], 30)
     X["dia_cos"] = cos_transform(X["dia"], 30)
     
-    X = X.drop(columns=["cidade", "bairro", "rua", "mes", "dia"])
+    X = X.drop(columns=["cidade", "bairro", "mes", "dia"])
     return {
         "location_code": X["location_code"],
         "date_features": X.drop(columns=["location_code"]),
@@ -69,7 +69,6 @@ def _build_score_experiment(data: dict):
     return {
         "cidade": loc.get("city"),
         "bairro": loc.get("neighborhood"),
-        "rua": loc.get("street"),
         "location_code": data.get("location_code"),
         "estacao": data.get("season"),
         "ano": day.year if isinstance(day, date) else None,
@@ -78,12 +77,14 @@ def _build_score_experiment(data: dict):
         "periodo": data.get("shift"),
     }
 
+def _adjust_score(scores):
+    adj = 1 - scores
+    return adj * 1_000
 
 def _build_report(
     experiments: pd.DataFrame, results: List[int], orient: ReportOrientation
 ):
-    experiments["mes"] = experiments["mes"].astype("string").str.pad(2, "left", "0")
-    experiments["dia"] = experiments["dia"].astype("string").str.pad(2, "left", "0")
+    experiments["data"] = pd.to_datetime(experiments[["ano", "mes", "dia"]].astype("string").agg("-".join, axis=1))
     experiments["periodo"] = experiments["periodo"].apply(Shift.from_code)
     experiments["estacao"] = experiments["estacao"].apply(Season.from_code)
     data = experiments.assign(score=results)
@@ -94,10 +95,10 @@ def _build_report(
 
 
 def _build_axes_report(data: pd.DataFrame):
-    days = (data["mes"] + "-" + data["dia"]).tolist()
+    days = data["data"].to_list()
     locations = (
-        data[["cidade", "bairro", "rua"]]
-        .apply(lambda r: Location(city=r[0], neighborhood=r[1], street=r[2]), axis=1)
+        data[["cidade", "bairro"]]
+        .apply(lambda r: Location(city=r[0], neighborhood=r[1]), axis=1)
         .tolist()
     )
     shifts = data["periodo"].tolist()
@@ -113,12 +114,10 @@ def _build_records_report(data: pd.DataFrame):
     records = []
     rows = data.to_dict("records")
     for rw in rows:
-        mes, dia = rw.get("mes"), rw.get("dia")
-        day = "-".join([mes, dia])
+        day = rw.get("data")
         loc = Location(
             city=rw.get("cidade"),
-            neighborhood=rw.get("bairro"),
-            street=rw.get("rua"),
+            neighborhood=rw.get("bairro")
         )
         records.append(
             ScoreReportRecord(

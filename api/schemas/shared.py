@@ -57,9 +57,6 @@ class Location(BaseModel):
     neighborhood: str = Field(
         description="A target neighborhood, if unknown will return an error"
     )
-    street: str | None = Field(
-        description="A target street, if unknown will return an error"
-    )
 
 
 class PeriodFilter(BaseModel):
@@ -69,14 +66,13 @@ class PeriodFilter(BaseModel):
     )
     end: date = Field(
         description="The last day of the period, in the format YYYY-MM-DD",
-        example="2023-02-31",
+        example="2023-02-28",
     )
 
 
 class ScoreFilters(BaseModel):
     location: Location
     shift: Shift
-    # hour: int | None = Field(description="A hour filter")
     day: date | None = Field(
         description="A target day, in the format YYYY-MM-DD", example="2023-02-01"
     )
