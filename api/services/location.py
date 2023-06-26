@@ -25,3 +25,10 @@ def get_city(city: str):
     if city.empty:
         raise LocationNotFound()
     return city["cidade"].values.tolist()
+
+def get_neighborhood_by_city(city: str, neighborhood: str) -> list[str]:
+    table = get_table("locations")
+    neighborhood = table[table["cidade"].str.contains(city, regex=False) & table["bairro"].str.contains(neighborhood, regex=False)]
+    if neighborhood.empty:
+        raise LocationNotFound()
+    return neighborhood["bairro"].values.tolist()
