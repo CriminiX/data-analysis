@@ -22,7 +22,6 @@ def get_neighborhood(neighborhood: str):
 def get_city(city: str):
     table = get_table("locations")
     city = table[table["cidade"].str.contains(city, regex=False)]
-    print(city)
     if city.empty:
         raise LocationNotFound()
     return city["cidade"].values.tolist()
