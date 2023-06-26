@@ -19,7 +19,7 @@ def get_neighborhood(neighborhood: str):
         raise LocationNotFound()
     return neighborhood["bairro"].values.tolist()
 
-def get_neighborhood(city: str):
+def get_city(city: str):
     table = get_table("locations")
     city = table[table["cidade"].str.contains(city)]
     if city.empty:
