@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from settings import get_settings
 from datetime import date
+import unicodedata
 
 def get_logger(name):
     logger = logging.getLogger(name)
@@ -42,3 +43,19 @@ def sin_transform(x, period):
 
 def cos_transform(x, period):
     return np.cos(x / period * 2 * np.pi)
+
+def remove_special_chars(text: str):
+    text = unicodedata.normalize('NFD', text) \
+        .encode('ascii', 'ignore') \
+        .decode("utf-8")
+    return str(text)
+
+def verify_city_values(city: str):
+    chars_city = ['sao ', 'sto ', 'santa ', 'santo ',  's. ']
+    trated_text = ''
+    
+    for i in range(len(chars_city)):
+        if chars_city[i] in city:
+            trated_text = city.replace(chars_city[i], 's.')
+
+    return trated_text
