@@ -50,12 +50,12 @@ def remove_special_chars(text: str):
         .decode("utf-8")
     return str(text)
 
-def verify_city_values(city: str):
-    chars_city = ['sao ', 'sto ', 'santa ', 'santo ',  's. ']
-    trated_text = ''
+def replace_saint_names(text: str):
+    saint_names = ['sao ', 'sto ', 'santa ', 'santo ',  's. ']
     
-    for i in range(len(chars_city)):
-        if chars_city[i] in city:
-            trated_text = city.replace(chars_city[i], 's.')
+    for saint in saint_names:
+        text = text.replace(saint, 's.')
+        if text.startswith(saint.strip()):
+            text = text.replace(saint.strip(), 's.')
 
-    return trated_text
+    return text

@@ -7,7 +7,6 @@ from store.estimator_store import predict
 from util import season_by_day, sin_transform, cos_transform
 from datetime import timedelta, date
 import pandas as pd
-import util
 
 def score(filters: ScoreFilters, orient: ReportOrientation):
     missing = []
@@ -129,24 +128,3 @@ def _build_records_report(data: pd.DataFrame):
             )
         )
     return ScoreReport(records=records)
-
-def search(city: str, neighborhood: str):
-
-    city_no_speceial_chars = util.remove_special_chars(city.lower())
-    trated_city = util.verify_city_values(city_no_speceial_chars)
-    
-    
-    if city is not None and neighborhood is not None:
-        data = get_neighborhood_by_city(trated_city.lower(), neighborhood.lower())
-        data_list_neighborhood = list(dict.fromkeys(data))
-        return { 'bairros': data_list_neighborhood}
-    
-    if city is not None:
-        data = get_city(trated_city.lower())
-        data_list_city = list(dict.fromkeys(data))
-        return { 'cidades': data_list_city }
-    elif neighborhood is not None:
-        data = get_neighborhood(neighborhood.lower())
-        data_list_neighborhood = list(dict.fromkeys(data))
-        return { 'bairros': data_list_neighborhood }
-        
