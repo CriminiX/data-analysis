@@ -11,7 +11,7 @@ def get_table(name: str):
     if t is None:
         raise TableNotFound()
     
-    return pd.read_csv(t)
+    return pd.read_csv(t, dtype="str")
 
 def register_table(name: str, path: str) -> None:
     if not os.path.exists(path) or not os.path.isfile(path):

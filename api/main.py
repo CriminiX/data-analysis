@@ -8,15 +8,6 @@ from tensorflow import keras
 import logging
 from settings import get_settings
 
-logger = get_logger(__file__)
-
-server_logger = logging.getLogger("uvicorn")
-clone_log_config(logger, server_logger)
-server_logger = logging.getLogger("uvicorn.access")
-clone_log_config(logger, server_logger)
-server_logger = logging.getLogger("uvicorn.error")
-clone_log_config(logger, server_logger)
-
 keras.utils.disable_interactive_logging()
 
 origins = ["*"]
@@ -37,6 +28,15 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def load_stores():
+    logger = get_logger(__file__)
+
+    server_logger = logging.getLogger("uvicorn")
+    clone_log_config(logger, server_logger)
+    server_logger = logging.getLogger("uvicorn.access")
+    clone_log_config(logger, server_logger)
+    server_logger = logging.getLogger("uvicorn.error")
+    clone_log_config(logger, server_logger)
+
     settings = get_settings()
     register_estimator("score_full", settings.model_path)
     register_table("locations", settings.location_table_path)
