@@ -26,7 +26,7 @@ def score(filters: ScoreFilters, orient: ReportOrientation):
 
 def _build_experiments(score_filters: ScoreFilters):
     experiments = []
-    code = get_code_by_location(score_filters.location)
+    code = int(get_code_by_location(score_filters.location))
     data = score_filters.dict()
     data["location_code"] = code
     if score_filters.period is not None:
