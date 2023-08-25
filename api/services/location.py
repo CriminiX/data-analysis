@@ -1,30 +1,37 @@
+from exceptions import MissingRequiredValues
 from store.data_store import get_table
 import util
 from schemas.shared import Location
+from schemas.responses import LocationRef, LocationSearchResponse
+
 
 
 class LocationNotFound(Exception):
     pass
 
 
-def search(city: str, neighborhood: str):
+def search(city: str | None, neighborhood: str | None, zip_code: str | None):
     if city is not None and neighborhood is not None:
         data = get_neighborhood_by_city(
             util.replace_saint_names(util.remove_special_chars(city.lower())),
             util.remove_special_chars(neighborhood.lower()),
         )
-        data_list_neighborhood = list(dict.fromkeys(data))
-        return {"bairros": data_list_neighborhood}
+        return LocationSearchResponse(records=[_to_location_ref(record) for record in data])
     elif city is not None:
         data = get_city(
             util.replace_saint_names(util.remove_special_chars(city.lower()))
         )
-        data_list_city = list(dict.fromkeys(data))
-        return {"cidades": data_list_city}
+        return LocationSearchResponse(records=[LocationRef(city=record) for record in data])
     elif neighborhood is not None:
         data = get_neighborhood(util.remove_special_chars(neighborhood.lower()))
-        data_list_neighborhood = list(dict.fromkeys(data))
-        return {"bairros": data_list_neighborhood}
+        return LocationSearchResponse(records=[LocationRef(neighborhood=record) for record in data])
+    elif zip_code is not None:
+        locations = get_location_by_zip_code(zip_code)
+        return LocationSearchResponse(
+            records=[_to_location_ref(loc) for loc in locations]
+        )
+    else:
+        raise MissingRequiredValues(["city", "neighborhood", "zip_code"])
 
 
 def get_code_by_location(loc: Location) -> int | None:
@@ -40,26 +47,39 @@ def get_code_by_location(loc: Location) -> int | None:
 
 def get_neighborhood(neighborhood: str):
     table = get_table("locations")
-    neighborhood = table[table["bairro"].str.contains(neighborhood, regex=False)]
-    if neighborhood.empty:
+    neighborhood_df = table[table["bairro"].str.contains(neighborhood, na=False, regex=False)]
+    if neighborhood_df.empty:
         raise LocationNotFound()
-    return neighborhood["bairro"].values.tolist()
+    return neighborhood_df["bairro"].drop_duplicates().values.tolist()
 
 
 def get_city(city: str):
     table = get_table("locations")
-    city = table[table["cidade"].str.contains(city, regex=False)]
-    if city.empty:
+    city_df = table[table["cidade"].str.contains(city, na=False, regex=False)]
+    if city_df.empty:
         raise LocationNotFound()
-    return city["cidade"].values.tolist()
+    return city_df["cidade"].drop_duplicates().values.tolist()
 
 
 def get_neighborhood_by_city(city: str, neighborhood: str) -> list[str]:
     table = get_table("locations")
-    neighborhood = table[
-        table["cidade"].str.contains(city, regex=False)
-        & table["bairro"].str.contains(neighborhood, regex=False)
+    neighborhood_df = table[
+        table["cidade"].str.contains(city, na=False, regex=False)
+        & table["bairro"].str.contains(neighborhood, na=False, regex=False)
     ]
-    if neighborhood.empty:
+    if neighborhood_df.empty:
         raise LocationNotFound()
-    return neighborhood["bairro"].values.tolist()
+    return neighborhood_df[["cidade", "bairro"]].drop_duplicates().sort_values(["cidade", "bairro"]).to_dict(orient="records")
+
+def get_location_by_zip_code(zip_code: str):
+    table = get_table("locations")
+    locations = table[table["cep"].str.startswith(zip_code, na=False)]
+    if locations.empty:
+        raise LocationNotFound()
+    return locations[["cidade", "bairro", "cep"]].sort_values(["cidade", "bairro"]).to_dict(orient="records")
+
+def _to_location_ref(location_data: dict):
+    neighborhood = location_data.get("bairro")
+    city = location_data.get("cidade")
+    zip_code = location_data.get("cep")
+    return LocationRef(city=city, neighborhood=neighborhood, zip_code=zip_code)

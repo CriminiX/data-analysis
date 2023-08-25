@@ -5,6 +5,8 @@ from settings import get_settings
 from datetime import date
 import unicodedata
 
+NUMBERS_ONLY = r"^([\d]+)$"
+
 def get_logger(name):
     logger = logging.getLogger(name)
     settings = get_settings()

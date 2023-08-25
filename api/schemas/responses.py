@@ -28,3 +28,11 @@ class ScoreReport(BaseModel):
 class DefaultErrorResponse(BaseModel):
     summary: str = "Something went wrong or the service is unavailable"
     errors: List[str] = []
+
+class LocationRef(BaseModel):
+    city: str | None
+    neighborhood: str | None
+    zip_code : str | None
+
+class LocationSearchResponse(BaseModel):
+    records: List[LocationRef]
