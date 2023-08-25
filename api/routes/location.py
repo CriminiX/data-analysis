@@ -6,6 +6,7 @@ from schemas.responses import DefaultErrorResponse
 from exceptions import MissingRequiredValues
 from services.location import search
 from services.location import LocationNotFound
+from schemas.responses import LocationSearchResponse
 import util
 
 router = APIRouter(prefix="/location/v1")
@@ -15,7 +16,7 @@ async def read_item(
     city: str | None = None, 
     neighborhood: str | None = None, 
     zip_code: Annotated[str | None, Query(regex=util.NUMBERS_ONLY)] = None
-):
+) -> LocationSearchResponse:
     try:
         return search(city, neighborhood, zip_code)
     except LocationNotFound as e:
