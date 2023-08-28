@@ -1,0 +1,6 @@
+beautifulsoup4==4.12.2
+requests==2.31.0
+selenium==4.4.3
+webdriver-manager==4.0.0
+numpy==1.25.2
+pandas==2.0.3
