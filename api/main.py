@@ -40,3 +40,4 @@ async def load_stores():
     settings = get_settings()
     register_estimator("score_full", settings.model_path)
     register_table("locations", settings.location_table_path)
+    register_table("zip_codes", settings.zip_code_table_path)
