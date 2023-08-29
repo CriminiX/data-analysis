@@ -13,13 +13,13 @@ class LocationNotFound(Exception):
 def search(city: str | None, neighborhood: str | None, zip_code: str | None):
     if city is not None and neighborhood is not None:
         data = get_neighborhood_by_city(
-            util.replace_saint_names(util.remove_special_chars(city.lower())),
+            util.remove_special_chars(city.lower()),
             util.remove_special_chars(neighborhood.lower()),
         )
         return LocationSearchResponse(records=[_to_location_ref(record) for record in data])
     elif city is not None:
         data = get_city(
-            util.replace_saint_names(util.remove_special_chars(city.lower()))
+            util.remove_special_chars(city.lower())
         )
         return LocationSearchResponse(records=[LocationRef(city=record) for record in data])
     elif neighborhood is not None:
@@ -72,11 +72,16 @@ def get_neighborhood_by_city(city: str, neighborhood: str) -> list[str]:
     return neighborhood_df[["cidade", "bairro"]].drop_duplicates().sort_values(["cidade", "bairro"]).to_dict(orient="records")
 
 def get_location_by_zip_code(zip_code: str):
-    table = get_table("locations")
-    locations = table[table["cep"].str.startswith(zip_code, na=False)]
-    if locations.empty:
+    zip_codes = get_table("zip_codes")
+    locations = get_table("locations")
+    location_code = zip_codes[zip_codes["cep"] == zip_code]
+    if location_code.empty:
         raise LocationNotFound()
-    return locations[["cidade", "bairro", "cep"]].sort_values(["cidade", "bairro"]).to_dict(orient="records")
+    code: str = location_code["neighborhood_code"].iat[0]
+    result = locations[locations["neighborhood_code"] == code]
+    if result.empty:
+        raise LocationNotFound()
+    return result[["cidade", "bairro"]].assign(cep=zip_code).drop_duplicates(subset=["cidade", "bairro"]).sort_values(["cidade", "bairro"]).to_dict(orient="records")
 
 def _to_location_ref(location_data: dict):
     neighborhood = location_data.get("bairro")
