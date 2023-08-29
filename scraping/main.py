@@ -6,9 +6,8 @@ import numpy as np
 import pandas as pd
 from datetime import date
 import time
-import glob
 import shutil
-
+import json
 class Driver():
 
     def __init__(self) -> None:
@@ -58,14 +57,13 @@ class Driver():
             
             self.transform_informations(principal_table, id)
         
-        self.save_file_csv(self.df_vehicles)
+            self.save_file_csv(self.df_vehicles)
 
     def transform_informations(self, table_on_html: str, id: int):
 
         if table_on_html is None:
             print('{ Problema ao coletar informações do id: ', id, '}')
         else: 
-      
             print('{ Iniciando coleta dos dados para o id: ', id, ' }')
             tbody = table_on_html.find_all('tbody')[0]
             rows = tbody.find_all('tr')
@@ -104,17 +102,30 @@ class Driver():
 
             info_veichle = []
             filtered_desc_labels = filtered_removed_empty[1:-1]
+            # Convertendo o array para um dicionário
+            json_dict = {filtered_desc_labels[i]: filtered_desc_labels[i+1] for i in range(0, len(filtered_desc_labels), 2)}
 
-            j = -1
+            # Verificando se determinados campos não existem no dicionário, caso não exista, será adicionado com o valor vazio
+            # para que o layout esteja correto independente do veículo
+            if "Geração" not in json_dict:
+                json_dict["Geração"] = ""
+            if "Tuchos" not in json_dict:
+                json_dict["Tuchos"] = ""
+            if "Variação do Comando" not in json_dict:
+                json_dict["Variação do Comando"] = ""
+            if "Acionamento comando" not in json_dict:
+                json_dict["Acionamento comando"] = ""
+            if "Código do Cambio" not in json_dict:
+                json_dict["Código do Cambio"] = ""
+            if "Estepe" not in json_dict:
+                json_dict["Estepe"] = ""
+            if "Carga útil" not in json_dict:
+                json_dict["Carga útil"] = ""
 
-            for i in range(len(filtered_desc_labels)):
-                # Indice para a informção do veículo
-                j = j+2
-                if j == 145:
-                    break
-                info_veichle.append(filtered_desc_labels[j])
+            # Convertendo o dicionário em uma string JSON formatada
+            json_vehicle = json.dumps(json_dict, indent=2,  ensure_ascii=False)
 
-            self.df_vehicles = pd.concat([self.df_vehicles, pd.DataFrame([info_veichle])], ignore_index=True)
+            self.df_vehicles = pd.concat([self.df_vehicles, pd.DataFrame([json_vehicle])], ignore_index=True)
             print('{ Coleta dos dados para o id: ', id, ' finalizado }')
             
     def save_file_csv(self, df_vehicles):
