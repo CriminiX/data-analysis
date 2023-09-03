@@ -34,7 +34,8 @@ class Driver():
 
     def get_html(self, code):
         self.driver.get(self.URL_BASE + str(code))
-        time.sleep(10)
+        time.sleep(20)
+        self.driver.get(self.URL_BASE + str(code))
         return self.driver.page_source
     
     def generate_ids(self):
@@ -125,11 +126,13 @@ class Driver():
             # Convertendo o dicionário em uma string JSON formatada
             json_vehicle = json.dumps(json_dict, indent=2,  ensure_ascii=False)
 
+            print(json_vehicle)
+
             self.df_vehicles = pd.concat([self.df_vehicles, pd.DataFrame([json_vehicle])], ignore_index=True)
-            print('{ Coleta dos dados para o id: ', id, ' finalizado }')
+            # print('{ Coleta dos dados para o id: ', id, ' finalizado }')
             
     def save_file_csv(self, df_vehicles):
-        df_vehicles.to_csv('./vehicles/anomesdia={}_/vehicles.csv'.format(self.today), index=False, header=False)
+        df_vehicles.to_csv('./vehicles/vehicles.csv'.format(self.today), index=False, header=False)
         print("Arquivo salvo com sucesso!")
 
 if __name__ == "__main__":
