@@ -54,3 +54,4 @@ urllib3==1.26.16
 uvicorn==0.22.0
 Werkzeug==2.3.6
 wrapt==1.14.1
+mysql-connector-python==8.1.0
