@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import inference, location
+from routes import inference, location, search_form
 from store.estimator_store import register_estimator
 from store.data_store import register_table
 from util import get_logger, clone_log_config
@@ -17,6 +17,7 @@ headers = ["*"]
 app = FastAPI()
 app.include_router(inference.router)
 app.include_router(location.router)
+app.include_router(search_form.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
