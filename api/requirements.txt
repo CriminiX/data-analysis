@@ -27,7 +27,7 @@ oauthlib==3.2.2
 opt-einsum==3.3.0
 packaging==23.1
 pandas==2.0.1
-protobuf==4.23.2
+protobuf==4.21.12
 pyasn1==0.5.0
 pyasn1-modules==0.3.0
 pydantic==1.10.7
@@ -54,3 +54,4 @@ urllib3==1.26.16
 uvicorn==0.22.0
 Werkzeug==2.3.6
 wrapt==1.14.1
+mysql-connector-python==8.1.0

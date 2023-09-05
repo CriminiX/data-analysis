@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from settings import get_settings
-from datetime import date
+from datetime import date, datetime
 import unicodedata
 
 NUMBERS_ONLY = r"^([\d]+)$"
@@ -61,3 +61,6 @@ def replace_saint_names(text: str):
             text = text.replace(saint.strip(), 's.')
 
     return text
+
+def get_today_date():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

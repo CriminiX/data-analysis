@@ -36,3 +36,11 @@ class LocationRef(BaseModel):
 
 class LocationSearchResponse(BaseModel):
     records: List[LocationRef]
+
+class ResearchBody(BaseModel):
+    scores: list[str]
+    cities: list[str]
+    neighborhoods: list[str]
+    satisfaction_rate: int
+    obversation: str | None
+    criminix_id: int
