@@ -11,18 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build image docker
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.IP_VM_AZURE_PROD }}
-        username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
-        key: ${{ secrets.PRIVATE_KEY_PROD }}
-        port: 22
-        script: "sudo docker stop criminix-api && sudo docker rm criminix-api && cd /home/admincriminix/app/data-analysis && sudo docker build . -f Dockerfile.api -t criminix-api"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP_VM_AZURE_PROD }}
+          username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
+          key: ${{ secrets.PRIVATE_KEY_PROD }}
+          port: 22
+          script: "sudo docker stop criminix-api && sudo docker rm criminix-api && cd /home/admincriminix/app/data-analysis && sudo docker build . -f Dockerfile.api -t criminix-api"
       - name: Deploy API on Docker
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.IP_VM_AZURE_PROD }}
-        username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
-        key: ${{ secrets.PRIVATE_KEY_PROD }}
-        port: 22
-        script: "cd /home/admincriminix/app/data-analysis && docker run --name criminix-api -p 8080:80 --network criminix criminix-api"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP_VM_AZURE_PROD }}
+          username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
+          key: ${{ secrets.PRIVATE_KEY_PROD }}
+          port: 22
+          script: "cd /home/admincriminix/app/data-analysis && docker run --name criminix-api -p 8080:80 --network criminix criminix-api"
