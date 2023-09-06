@@ -43,4 +43,3 @@ class ResearchBody(BaseModel):
     neighborhoods: list[str]
     satisfaction_rate: int
     obversation: str | None
-    criminix_id: int
