@@ -6,9 +6,9 @@ class DataBaseConn:
 
     def __init__(self):
         self.db_name = 'db_criminix'
-        self.db_user = os.environ['db_user']
-        self.db_pass = os.environ['db_pass']
-        self.db_host = 'localhost'
+        self.db_user = os.environ['DB_USER']
+        self.db_pass = os.environ['DB_PASS']
+        self.db_host = 'mysql'
         self.db_port = '3306'
         self.conn    = None
 
