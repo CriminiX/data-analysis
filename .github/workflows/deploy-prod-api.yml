@@ -1,0 +1,36 @@
+name: Production API Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - api/**
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull repository
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP_VM_AZURE_PROD }}
+          username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
+          key: ${{ secrets.PRIVATE_KEY_PROD }}
+          port: 22
+          script: "cd /home/admincriminix/app/data-analysis && git pull"
+      - name: Build image docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP_VM_AZURE_PROD }}
+          username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
+          key: ${{ secrets.PRIVATE_KEY_PROD }}
+          port: 22
+          script: "sudo docker stop criminix-api && sudo docker rm criminix-api && cd /home/admincriminix/app/data-analysis && sudo docker build . -f Dockerfile.api -t criminix-api"
+      - name: Deploy API on Docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP_VM_AZURE_PROD }}
+          username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
+          key: ${{ secrets.PRIVATE_KEY_PROD }}
+          port: 22
+          script: "cd /home/admincriminix/app/data-analysis && docker run -d --restart always --name criminix-api -p 8080:80 -e DB_USER=$(echo $DB_USER) -e DB_PASS=$(echo $DB_PASS) --network criminix criminix-api"
