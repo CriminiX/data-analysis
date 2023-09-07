@@ -42,4 +42,5 @@ class ResearchBody(BaseModel):
     cities: list[str]
     neighborhoods: list[str]
     satisfaction_rate: int
+    suggestion_scores: list[str]
     obversation: str | None

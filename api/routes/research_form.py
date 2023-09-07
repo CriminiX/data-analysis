@@ -11,12 +11,13 @@ from schemas.responses import ResearchBody
 router = APIRouter(prefix="/research/v1")
 
 @router.post("/response-user")
-async def save_response_from_user(body: ResearchBody, criminix_id: Annotated[str , Header()] = None):
+async def save_response_from_user(body: ResearchBody, criminix_id: str = Header(..., convert_underscores=True)):
     try:
         insert_research_form(body.scores, 
                              body.cities, 
                              body.neighborhoods, 
                              body.satisfaction_rate, 
+                             body.suggestion_scores,
                              body.obversation, 
                              criminix_id)
         return JSONResponse(jsonable_encoder({ "message": "answer registered successfully" }), 201)
