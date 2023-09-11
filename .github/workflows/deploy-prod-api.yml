@@ -33,4 +33,4 @@ jobs:
           username: ${{ secrets.USERNAME_VM_AZURE_PROD }}
           key: ${{ secrets.PRIVATE_KEY_PROD }}
           port: 22
-          script: "cd /home/admincriminix/app/data-analysis && docker run -d --restart always --name criminix-api -p 8080:80 -e DB_USER=$(echo $DB_USER) -e DB_PASS=$(echo $DB_PASS) --network criminix criminix-api"
+          script: "cd /home/admincriminix/app/data-analysis && docker run -d --restart always --name criminix-api -p 5001:80 -e DB_USER=$(echo $DB_USER) -e DB_PASS=$(echo $DB_PASS) --network criminix criminix-api"
