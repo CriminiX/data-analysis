@@ -43,4 +43,5 @@ class ResearchBody(BaseModel):
     neighborhoods: list[str]
     satisfaction_rate: int
     suggestion_scores: list[str]
+    is_work_insurance: int
     obversation: str | None

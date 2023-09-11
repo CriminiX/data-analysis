@@ -18,6 +18,7 @@ async def save_response_from_user(body: ResearchBody, criminix_id: str = Header(
                              body.neighborhoods, 
                              body.satisfaction_rate, 
                              body.suggestion_scores,
+                             body.is_work_insurance,
                              body.obversation, 
                              criminix_id)
         return JSONResponse(jsonable_encoder({ "message": "answer registered successfully" }), 201)
