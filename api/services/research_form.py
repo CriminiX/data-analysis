@@ -8,6 +8,7 @@ def insert_research_form(
     neighborhoods: list[str],
     satisfaction_rate: int,
     suggestion_scores: list[str],
+    is_work_insurance: int,
     obversation: str | None,
     criminix_id: str
 ):
@@ -24,6 +25,8 @@ def insert_research_form(
         raise MissingRequiredValues(["criminix_id"])
     elif suggestion_scores is None:
         raise MissingRequiredValues(["suggestion_scores"])
+    elif is_work_insurance is None:
+        raise MissingRequiredValues(["is_work_insurance"])
     else:
         list_of_scores = ', '.join([str(elem) for elem in scores])
         list_of_cities = ', '.join([str(elem) for elem in cities])
@@ -33,9 +36,9 @@ def insert_research_form(
         conn = DataBaseConn()
 
         query = """
-            INSERT INTO tb_research_form (scores, cities, neighborhoods, satisfaction_rate, obversation, suggestion_scores, criminix_id, created_at)
-            VALUES ('{}', '{}', '{}', {}, '{}', '{}', '{}', '{}')
-        """.format(str(list_of_scores), str(list_of_cities), str(list_of_neighborhoods), int(satisfaction_rate), str(obversation), str(list_of_suggestion_score), str(criminix_id), util.get_today_date())
+            INSERT INTO tb_research_form (scores, cities, neighborhoods, satisfaction_rate, obversation, suggestion_scores, is_work_insurance, criminix_id, created_at)
+            VALUES ('{}', '{}', '{}', {}, '{}', '{}', '{}', '{}', '{}')
+        """.format(str(list_of_scores), str(list_of_cities), str(list_of_neighborhoods), int(satisfaction_rate), str(obversation), str(list_of_suggestion_score), int(is_work_insurance), str(criminix_id), util.get_today_date())
 
         cursor = conn.db_connect()
         cursor.execute(query)
